@@ -9,3 +9,5 @@ tqdm
 pyyaml
 weave
 sqlglot[rs]
+prettytable
+func_timeout

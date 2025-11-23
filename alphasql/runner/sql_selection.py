@@ -14,12 +14,18 @@ def select_final_sql_query(results_file_path: str, db_root_dir: str):
     question_id = int(results_file_path.split("/")[-1].split(".")[0])
     with open(results_file_path, "rb") as f:
         results = pickle.load(f)
+    if results is None or len(results) == 0:
+        return {
+            "question_id": question_id,
+            "db_id": "financial",
+            "sql": "ERROR"
+        }
     db_id = results[0][0].db_id
     db_path = f"{db_root_dir}/{db_id}/{db_id}.sqlite"
     result_groups = defaultdict(list)
     result_groups_with_invalid_result = defaultdict(list)
     
-    for idx, result in tqdm(enumerate(results), desc=f"Processing results for {question_id}"):
+    for idx, result in enumerate(results):
         sql_query = result[-1].final_sql_query
         answer = cached_execute_sql_with_timeout(db_path, sql_query)
         if answer.result_type.value == "success":
@@ -53,6 +59,7 @@ def select_final_sql_query(results_file_path: str, db_root_dir: str):
 
         return {
             "question_id": question_id,
+            "db_id": db_id,
             "sql": final_selected_sql_query
         }
 
@@ -82,6 +89,7 @@ def select_final_sql_query(results_file_path: str, db_root_dir: str):
 
     return {
         "question_id": question_id,
+        "db_id": db_id,
         "sql": final_selected_sql_query
     }
 
@@ -93,10 +101,23 @@ def main(args):
         
         for future in tqdm(as_completed(future_to_path), total=len(future_to_path), desc="Processing results"):
             selected_item = future.result()
-            final_pred_sqls[str(selected_item["question_id"])] = selected_item["sql"]
+            final_pred_sqls[str(selected_item["question_id"])] = selected_item["sql"] + '\t----- bird -----\t' + selected_item["db_id"]
+
+    # Fill missing IDs with default value
+    if final_pred_sqls:
+        question_ids = [int(qid) for qid in final_pred_sqls.keys()]
+        min_id = min(question_ids)
+        max_id = max(question_ids)
+        
+        for qid in range(min_id, max_id + 1):
+            if str(qid) not in final_pred_sqls:
+                final_pred_sqls[str(qid)] = "ERROR\t----- bird -----\tfinancial"
+    
+    # Sort by question_id before output
+    sorted_pred_sqls = dict(sorted(final_pred_sqls.items(), key=lambda x: int(x[0])))
 
     with open(args.output_path, "w") as f:
-        json.dump(final_pred_sqls, f, indent=4)
+        json.dump(sorted_pred_sqls, f, indent=4)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
