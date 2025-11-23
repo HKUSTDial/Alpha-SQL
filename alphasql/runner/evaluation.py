@@ -1,3 +1,6 @@
+# Copy from https://github.com/AlibabaResearch/DAMO-ConvAI/tree/main/bird
+# The way of finding files has been modified.
+
 import sys
 import json
 import argparse
@@ -52,7 +55,8 @@ def package_sqls(sql_path, db_root_path, mode='gpt', data_mode='dev'):
     clean_sqls = []
     db_path_list = []
     if mode == 'gpt':
-        sql_data = json.load(open(sql_path + 'predict_' + data_mode + '.json', 'r'))
+        # sql_data = json.load(open(sql_path + 'predict_' + data_mode + '.json', 'r'))
+        sql_data = json.load(open(sql_path, 'r'))
         for idx, sql_str in sql_data.items():
             if type(sql_str) == str:
                 sql, db_name = sql_str.split('\t----- bird -----\t')
@@ -62,7 +66,8 @@ def package_sqls(sql_path, db_root_path, mode='gpt', data_mode='dev'):
             db_path_list.append(db_root_path + db_name + '/' + db_name + '.sqlite')
 
     elif mode == 'gt':
-        sqls = open(sql_path + data_mode + '_gold.sql')
+        # sqls = open(sql_path + data_mode + '_gold.sql')
+        sqls = open(sql_path)
         sql_txt = sqls.readlines()
         # sql_txt = [sql.split('\t')[0] for sql in sql_txt]
         for idx, sql_str in enumerate(sql_txt):
@@ -133,7 +138,7 @@ if __name__ == '__main__':
     args = args_parser.parse_args()
     exec_result = []
 
-    pred_queries, db_paths = package_sqls(args.predicted_sql_path, args.db_root_path, mode='gt',
+    pred_queries, db_paths = package_sqls(args.predicted_sql_path, args.db_root_path, mode='gpt',
                                           data_mode=args.data_mode)
     # generate gt sqls:
     gt_queries, db_paths_gt = package_sqls(args.ground_truth_path, args.db_root_path, mode='gt',
