@@ -157,7 +157,7 @@ def load_value_examples(db_id: str, database_root_dir: str, table_name: str, col
         List of value examples.
     """
     db_path = Path(database_root_dir) / db_id / f"{db_id}.sqlite"
-    examples = execute_sql_without_timeout(db_path, f"SELECT DISTINCT `{column_name}` FROM `{table_name}` WHERE `{column_name}` IS NOT NULL AND `{column_name}` != '' LIMIT {max_num_examples};").result
+    examples = execute_sql_without_timeout(db_path, f"SELECT DISTINCT `{column_name}` FROM `{table_name}` WHERE `{column_name}` IS NOT NULL AND `{column_name}` != '' AND length(cast(`{column_name}` as text)) <= {max_example_length} LIMIT {max_num_examples};").result
     return [example[0] for example in examples]
 
 def load_database_schema_dict(db_id: str, database_root_dir: str) -> Dict[str, Dict[str, Dict[str, Any]]]:
