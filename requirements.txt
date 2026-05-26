@@ -5,6 +5,7 @@ python-dotenv
 openai
 pandas
 loguru
+prettytable
 tqdm
 pyyaml
 weave

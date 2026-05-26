@@ -143,7 +143,7 @@ def load_database_description(db_id: str, database_root_dir: str) -> Dict[str, D
         database_description[table_name_lower] = table_description
     return database_description
 
-def load_value_examples(db_id: str, database_root_dir: str, table_name: str, column_name: str, max_num_examples: int = 3) -> List[str]:
+def load_value_examples(db_id: str, database_root_dir: str, table_name: str, column_name: str, max_num_examples: int = 3, max_example_length: int = 100) -> List[str]:
     """
     Load value examples from database.
     
@@ -153,6 +153,7 @@ def load_value_examples(db_id: str, database_root_dir: str, table_name: str, col
         table_name: Table name.
         column_name: Column name.
         max_num_examples: Maximum number of value examples to load.
+        max_example_length: Maximum text length for each value example.
     Returns:
         List of value examples.
     """
