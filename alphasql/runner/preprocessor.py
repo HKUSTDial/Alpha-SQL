@@ -153,7 +153,7 @@ class Preprocessor:
                         keywords.extend(keyword.strip("'").replace("=", " ").replace("(", " ").replace(")", " ").replace("_", " ").split(" "))
                         keywords.extend(keyword.strip("\"").replace("=", " ").replace("(", " ").replace(")", " ").replace("_", " ").split(" "))
                     # remove duplicate keywords
-                    keywords = list(set(keyword.strip() for keyword in keywords))
+                    keywords = list(set(keyword.strip() for keyword in keywords if keyword.strip() != ""))
                     return keywords
                 else:
                     logger.warning(f"Failed to extract Python list from response, attempt {retry_count + 1}/{max_retries}")
@@ -224,9 +224,18 @@ class Preprocessor:
         Returns:
             The filtered candidate values.
         """
+        candidate_values = [
+            candidate_value
+            for candidate_value in candidate_values
+            if str(candidate_value["value"]).strip() != ""
+            and str(candidate_value["query"]).strip() != ""
+        ]
+        if len(candidate_values) == 0:
+            return []
+
         cosine_similarity = lambda x, y: np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
-        to_embeded_list = [candidate_value["value"] for candidate_value in candidate_values]
-        to_embeded_list += [candidate_value["query"] for candidate_value in candidate_values]
+        to_embeded_list = [str(candidate_value["value"]) for candidate_value in candidate_values]
+        to_embeded_list += [str(candidate_value["query"]) for candidate_value in candidate_values]
         to_embeded_list = list(set(to_embeded_list))
         embeddings = EMBEDDING_MODEL_CALLABLE.embed_documents(to_embeded_list)
         embeddings = {to_embeded_list[i]: embeddings[i] for i in range(len(to_embeded_list))}

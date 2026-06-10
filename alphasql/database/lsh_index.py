@@ -20,7 +20,7 @@ class LSHIndex:
         QUERY_DISTINCT_VALUES_SQL (str): The SQL query to get the unique values for a column.
         CACHED_LSH_INDEX (Dict[str, Tuple[MinHashLSH, Dict[str, Tuple[MinHash, str, str, int, str]]]]): A dictionary mapping database ids to LSH indexes.
     """
-    QUERY_DISTINCT_VALUES_SQL = "SELECT DISTINCT `{column_name}` FROM `{table_name}` WHERE `{column_name}` IS NOT NULL"
+    QUERY_DISTINCT_VALUES_SQL = "SELECT DISTINCT `{column_name}` FROM `{table_name}` WHERE `{column_name}` IS NOT NULL AND trim(cast(`{column_name}` as text)) != ''"
     
     CACHED_LSH_INDEX: Dict[str, Tuple[MinHashLSH, Dict[str, Tuple[MinHash, str, str, int, str]]]] = {}
     
@@ -47,7 +47,11 @@ class LSHIndex:
                     continue
                 query = cls.QUERY_DISTINCT_VALUES_SQL.format(column_name=column_name, table_name=table_name)
                 execution_result = execute_sql_without_timeout(db_path, query)
-                unique_values[table_name][column_name] = [str(row[0]) for row in execution_result.result]
+                unique_values[table_name][column_name] = [
+                    str(row[0])
+                    for row in execution_result.result
+                    if str(row[0]).strip() != ""
+                ]
                 
         return unique_values
         
@@ -146,4 +150,3 @@ class LSHIndex:
             }
             for result_key, score in similar_items
         ]
-        
